@@ -69,7 +69,6 @@
 import SwiftUI
 
 extension UIViewController {
-
     private struct Preview : UIViewControllerRepresentable {
     
         let viewController : UIViewController
@@ -92,6 +91,7 @@ extension UIViewController {
 
 ```swift
 struct ViewControllerProvider : PreviewProvider {
+
     static var previews: some View {
         YourViewControllerName().showPreview()
     }
@@ -105,47 +105,124 @@ struct ViewControllerProvider : PreviewProvider {
 
 
 <!-- GETTING STARTED -->
-## Getting Started
+## Adding shadow for UICollectionViewCell
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+Полезное расширение для UICollectionViewCell, по одному вызову добавляет тень к ячейке.
 
-### Prerequisites
+Вызывать в методе cellForItemAt :
+```swift
+cell.addShadow()
+```
+Код экстеншена: 
+```swift
+extension UICollectionViewCell {
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
+    func addShadow(corner: CGFloat = 10, color: UIColor = .black, radius: CGFloat = 15, offset: CGSize = CGSize(width: 0, height: 0), opacity: Float = 0.2) {
+        let cell = self
+        cell.contentView.layer.borderWidth = 0
+        cell.contentView.layer.borderColor = UIColor.clear.cgColor
+        cell.contentView.layer.masksToBounds = true
+        cell.layer.shadowColor = color.cgColor
+        cell.layer.shadowOffset = offset
+        cell.layer.shadowRadius = radius
+        cell.layer.shadowOpacity = opacity
+        cell.layer.cornerRadius = 10
+        cell.layer.masksToBounds = false
+        cell.layer.shadowPath = UIBezierPath(roundedRect: self.bounds, cornerRadius: cell.contentView.layer.cornerRadius).cgPath
+    }
+}
+```
+
+Настраивать под себя как душе угодно
+## Changing UIImage color
+
+Часто получается так, что скачанный ассет имеет неподходящий цвет. Этот код позволяет менять цвет векторного изображения на любой необходимый
+
+
+  ```swift
+  extension UIImage {
+    
+    func imageWithColor(color: UIColor) -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(self.size, false, UIScreen.main.scale)
+        let context = UIGraphicsGetCurrentContext()
+
+        color.setFill()
+
+        context!.translateBy(x: 0, y: self.size.height)
+        context!.scaleBy(x: 1.0, y: -1.0)
+
+        context!.setBlendMode(CGBlendMode.colorBurn)
+        let rect = CGRect(x: 0, y: 0, width: self.size.width, height: self.size.height)
+        context!.draw(self.cgImage!, in: rect)
+
+        context!.setBlendMode(CGBlendMode.sourceIn)
+        context!.addRect(rect)
+        context!.drawPath(using: CGPathDrawingMode.fill)
+
+        let coloredImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return coloredImage!
+    }
+    
+}
   ```
 
-### Installation
+## Adding new UIFont to project
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
+1. Необходимо закинуть файлы с расширением .ttf в сам проект
+2. После в info.plist необходимо добавить связь
+   <br />
+<div align="center">
+   <img width="595" alt="Снимок экрана 2023-11-09 в 22 45 31" src="https://github.com/semaDilthey/myNotes/assets/128741166/2c659e47-7239-4273-824e-9e466b8ff84a">
+</div>
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
+4. Создать файл с кодом примерно следующего содеражния. Все настройки индивидуальны
+```swift
+ extension UIFont {
+    
+    enum MarkProFontWeight: Int {
+        case plain = 400
+        case medium = 500
+        case heavy = 800
+        
+        var nameFont: String {
+            switch self {
+            case .plain:
+                return "DSLCLU+MarkPro"
+            case .medium:
+                return "DSLCLU+MarkPro-Medium"
+            case .heavy:
+                return "DSLCLU+MarkPro-Heavy"
+            }
+        }
+    }
+    
+    static func markProFont(size fontSize: CGFloat, weight fontWeight: MarkProFontWeight) -> UIFont? {
+        UIFont(name: fontWeight.nameFont, size: fontSize)
+    }
+}
+```
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
 <!-- USAGE EXAMPLES -->
-## Usage
+## SceneDelegate и AppDelegate - разбор 
+AppDelegate отвечает за жизненный цикл и настройку приложения. SceneDelegate отвечает за то, что отображается на экране (Windows или Scenes), и управлять способом отображения вашего приложения.
+SceneDelegate появился начиная с iOs 13.
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+### AppDelegate 
+Возможно, вы уже знакомы с AppDelegate, это вход в приложение iOS, application(_:didFinishLaunchingWithOptions:) 
+Это первая функция, вызываемая системой после запуска вашего приложения.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+AppDelegate реализует библиотеку UIKit UIApplicationDelegate протокол. 
+
+
+
+_For more examples, please refer to the [Documentation](https://russianblogs.com/article/22911460147/)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
