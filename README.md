@@ -211,15 +211,80 @@ extension UICollectionViewCell {
 
 <!-- USAGE EXAMPLES -->
 ## SceneDelegate и AppDelegate - разбор 
-AppDelegate отвечает за жизненный цикл и настройку приложения. SceneDelegate отвечает за то, что отображается на экране (Windows или Scenes), и управлять способом отображения вашего приложения.
-SceneDelegate появился начиная с iOs 13.
+AppDelegate отвечает за обработку событий на уровне всего приложения (таких как запуск), жизненный цикл приложения и настройку.
+
+SceneDelegate отвечает за управление тем, что отображается на экране (окна или сцены) и способом отображения вашего приложения.
+
+``` swift
+scene(_:willConnectTo:options:)
+```
+ – это первый метод, вызываемый в жизненном цикле UISceneSession. В этом методе создается новое окно UIWindow, устанавливается корневой контроллер представления и это окно становится ключевым для отображения.
+``` swift
+application(_:didFinishLaunchingWithOptions:)
+```
+-  вызывается при запуске приложения и здесь выполняется настройка приложения. Раньше iOS 13 мы могли использовать этот метод для настройки объекта UIWindow и назначения экземпляра ViewController для этого объекта UIWindow для отображения на экране. Начиная с iOS 13, если ваше приложение имеет сцены, то AppDelegate больше не отвечает за это и эта функциональность перешла в SceneDelegate.
 
 ### AppDelegate 
-Возможно, вы уже знакомы с AppDelegate, это вход в приложение iOS, application(_:didFinishLaunchingWithOptions:) 
-Это первая функция, вызываемая системой после запуска вашего приложения.
+Даже после iOS 13, AppDelegate все еще является главной точкой входа приложения.
 
-AppDelegate реализует библиотеку UIKit UIApplicationDelegate протокол. 
+По умолчанию AppDelegate.swift имеет три основных метода.
+``` swift
+1. func Application(_:DidFinishLaunchingWithOptions:) -> Bool
+```
+ В iOS 12 или ранее вы могли использовать этот метод для создания и настройки объекта UIWindow и присвоения экземпляра UIViewController окну для отображения.
+Если ваше приложение использует сцены, теперь настройка этого несет на себе ответственность не AppDelegate.
 
+Поскольку ваше приложение теперь может иметь несколько активных окон или UISceneSessions, имеет мало смысла управлять только одним объектом окна в AppDelegate.
+``` swift
+2. func Application(_:ConfigurationForConnecting:Options:) -> UISceneConfiguration
+```
+Когда приложению нужна новая сцена или окно.
+``` swift
+3. func Application(_:DidDiscardSceneSessions:)
+```
+Когда пользователь отбрасывает сцену, проводя ее с многозадачного окна или если она отбрасывается программно.
+Этот метод вызывается для каждой отброшенной сцены кратко после вызова метода (_:didFinishLaunchingWithOptions:), если приложение не работает, когда пользователь отклоняет сцену.
+
+Помимо этих методов, AppDelegate все еще может обрабатывать URL-адреса, кэшировать память, завершать приложение, отправлять push-уведомления, работать с местоположением и т. д.
+
+### SceneDelegate 
+
+С iOS 13, SceneDelegate берет на себя некоторые обязанности от AppDelegate, в частности, UIWindow в AppDelegate теперь является UIScene в SceneDelegate.
+
+Отображение на экране является ответственностью SceneDelegate. В SceneDelegate есть 6 функций по умолчанию.
+
+``` swift
+1.Scene(_:WillConnectTo:Options:)
+```
+Она создает новое window, устанавливает корневой root контроллер представления, и делает это окно ключевым makeKeyAndVisible, которое будет отображаться.
+``` swift
+2.SceneWillEnterForeground(_:)
+```
+When the app becomes active for the first time or when transitions from background to foreground.
+Когда приложение становится активным в первый раз или переходит из фонового режима в передний план.
+
+``` swift
+3.SceneDidBecomeActive(_:)
+``` 
+Когда сцена переходит из неактивного состояния в активное состояние.
+
+``` swift
+4.SceneWillResignActive(_:)
+```
+Когда сцена перейдет из активного состояния в неактивное состояние.
+
+
+Это может произойти из-за временных прерываний (например, входящего телефонного звонка).
+``` swift
+5.SceneDidEnterBackground(_:)
+```
+Когда сцена переходит из переднего плана в фоновый режим.
+``` swift
+6.SceneDidDisconnect(_:)
+``` 
+При удалении сцены системой.
+
+Сцена может быть повторно подключена позже, так как ее сеанс не обязательно был отменен (см. метод application:didDiscardSceneSessions).
 
 
 _For more examples, please refer to the [Documentation](https://russianblogs.com/article/22911460147/)_
